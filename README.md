@@ -179,7 +179,7 @@ TEST_DATABASE_URL=postgresql://vms:vms@localhost:5432/vms_test?schema=public
 npm run test:api
 ```
 
-流程會先檢查 `TEST_DATABASE_URL` 存在且不能與 `DATABASE_URL` 指向同一個 database，接著建立缺失的 `vms_test`，並對 TestDB 執行 `prisma migrate reset --force --skip-seed --skip-generate`，再跑 Jest。每個 test case 前仍會透過 `resetDb()` 清空 `AuditLog`、`Vehicle`、`Employee`。
+流程會先檢查 `TEST_DATABASE_URL` 存在且不能與 `DATABASE_URL` 指向同一個 database，接著建立缺失的 `vms_test`，並對 TestDB 執行 `prisma migrate reset --force`，再跑 Jest。每個 test case 前仍會透過 `resetDb()` 清空 `AuditLog`、`Vehicle`、`Employee`。
 
 若只想建立/重置 TestDB 給 pgAdmin 看，不跑測試：
 

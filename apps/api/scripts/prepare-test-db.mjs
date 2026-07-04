@@ -75,7 +75,7 @@ function resolveTestDatabaseEnv() {
 function runPrisma(args, options = {}) {
   const result = spawnSync(process.execPath, [prismaCli, ...args], {
     cwd: apiRoot,
-    env: process.env,
+    env: { ...process.env, ...options.env },
     input: options.input,
     encoding: options.input ? "utf8" : undefined,
     stdio: options.inherit ? "inherit" : "pipe",
@@ -94,7 +94,10 @@ function runPrisma(args, options = {}) {
 
 function ensureTestDatabase(databaseName, maintenanceDatabaseUrl) {
   const sql = `CREATE DATABASE ${quotePgIdentifier(databaseName)};`;
-  const result = runPrisma(["db", "execute", "--stdin", "--url", maintenanceDatabaseUrl], { input: sql });
+  const result = runPrisma(["db", "execute", "--stdin"], {
+    env: { DATABASE_URL: maintenanceDatabaseUrl },
+    input: sql,
+  });
   const output = `${result.stdout}\n${result.stderr}`;
 
   if (result.status === 0) {
@@ -109,7 +112,7 @@ function ensureTestDatabase(databaseName, maintenanceDatabaseUrl) {
 }
 
 function resetTestDatabase() {
-  const result = runPrisma(["migrate", "reset", "--force", "--skip-seed", "--skip-generate"], { inherit: true });
+  const result = runPrisma(["migrate", "reset", "--force"], { inherit: true });
   if (result.status !== 0) {
     process.exit(result.status);
   }
