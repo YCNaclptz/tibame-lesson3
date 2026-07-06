@@ -1,3 +1,8 @@
+import { createRequire } from "node:module";
+
+const requireFromApi = createRequire(import.meta.url);
+const tsJestTransformer = requireFromApi.resolve("ts-jest");
+
 /** @type {import('jest').Config} */
 export default {
   rootDir: "../..",
@@ -10,7 +15,7 @@ export default {
   },
   transform: {
     "^.+\\.tsx?$": [
-      "ts-jest",
+      tsJestTransformer,
       {
         useESM: true,
         tsconfig: "<rootDir>/apps/api/tsconfig.test.json",

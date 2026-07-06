@@ -1,0 +1,18 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+linkWorkspacePackages: true
+
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - bcrypt
+  - esbuild
+  - prisma
+  - unrs-resolver
+allowBuilds:
+  "@prisma/engines": true
+  bcrypt: true
+  esbuild: true
+  prisma: true
+  unrs-resolver: true

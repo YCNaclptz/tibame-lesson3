@@ -1,5 +1,4 @@
-import express from "express";
-import "express-async-errors";
+import express, { type Express } from "express";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -14,7 +13,7 @@ import { vehiclesRouter } from "./routes/vehicles.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { auditLogsRouter } from "./routes/audit-logs.js";
 
-export function buildApp() {
+export function buildApp(): Express {
   const app = express();
   app.use(helmet());
   app.use(

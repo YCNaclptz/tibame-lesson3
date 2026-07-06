@@ -1,26 +1,27 @@
 # Vehicle Management System (VMS)
 
-內部車輛管理系統。Monorepo（npm workspaces），前端 Vite + React + shadcn/ui，後端 Express + Prisma + Postgres。
+內部車輛管理系統。Monorepo（npm workspaces，並支援 pnpm workspace install），前端 Vite + React + shadcn/ui，後端 Express + Prisma + Postgres。
 
 ---
 
 ## 先選定執行環境
 
-請在 **同一個環境** 完成 `npm install`、`npm run db:migrate`、`npm run seed`、`npm run dev`。
+請在 **同一個環境** 與 **同一套 package manager** 完成 install、migration、seed、dev。此 repo 同時支援 `npm install` 與 `pnpm install`；擇一使用即可。
 
-- 如果你用 WSL，就在 WSL 終端進入 `/mnt/d/source/repos/tibame-lesson3` 後執行所有 npm 指令。
-- 如果你用 Windows PowerShell，就在 `D:\source\repos\tibame-lesson3` 後執行所有 npm 指令。
-- 不要在 Windows 跑 `npm install`，又切到 WSL 跑 `npm run dev`；Rollup、Prisma、bcrypt 都有 native/optional dependency，跨 OS 混用 `node_modules` 會出現缺少 `@rollup/rollup-linux-*`、Prisma query engine 不符、或 bcrypt 載入失敗。
+- 如果你用 WSL，就在 WSL 終端進入 `/mnt/d/source/repos/tibame-lesson3` 後執行所有指令。
+- 如果你用 Windows PowerShell，就在 `D:\source\repos\tibame-lesson3` 後執行所有指令。
+- 不要在 Windows 跑 `npm install`，又切到 WSL 跑 `pnpm run dev`；也不要在同一份 `node_modules` 內混用 `npm install` 與 `pnpm install`。Rollup、Prisma、bcrypt 都有 native/optional dependency，跨 OS 或跨 package manager 混用會出現缺少 `@rollup/rollup-linux-*`、Prisma query engine 不符、或 bcrypt 載入失敗。
+- 若要使用 pnpm，Node 20+ 可先執行 `corepack enable`，或確認本機已有 `pnpm --version`。本 repo 已以 pnpm 11.7.0 驗證。
 
 如果已經混用過，請先停掉 dev server，然後在你要使用的環境中重建依賴：
 
 ```bash
 rm -rf node_modules
-npm install
-npm run db:migrate
+npm install        # 或 pnpm install
+npm run db:migrate # 或 pnpm run db:migrate
 ```
 
-> Windows PowerShell 沒有 `rm -rf`；若選 Windows，請用 `Remove-Item -Recurse -Force node_modules` 後再 `npm install`。
+> Windows PowerShell 沒有 `rm -rf`；若選 Windows，請用 `Remove-Item -Recurse -Force node_modules` 後再 `npm install` 或 `pnpm install`。
 
 ## 一次性安裝
 
@@ -33,7 +34,25 @@ npm run seed                  # 建立第一個 admin（讀 .env 的 SEED_ADMIN_
 npm run seed:mock             # 選用：塞 30 員工 + 50 車輛模擬資料，方便看 dashboard / 分頁
 ```
 
-第一次啟動若沒有執行 `npm run db:migrate`，API 會連得到 Postgres，但登入時會因為 `Employee` 資料表不存在而回 `500 INTERNAL_ERROR`。
+若選 pnpm，對應流程如下：
+
+```bash
+cp .env.example .env
+docker compose up -d
+pnpm install
+pnpm run db:migrate
+pnpm run seed
+pnpm run seed:mock
+```
+
+pnpm 安裝由 `pnpm-workspace.yaml` 管理：
+
+- `packages` 宣告 `apps/*` 與 `packages/*`。
+- `linkWorkspacePackages: true` 讓 `@vms/shared` 以本機 workspace 解析，不會去 npm registry 找私有套件。
+- `allowBuilds` / `onlyBuiltDependencies` 允許 Prisma、bcrypt、esbuild、unrs-resolver 的必要 build scripts，讓 `pnpm install` 可非互動完成。
+- `package-lock.json` 與 `pnpm-lock.yaml` 會同時保留；npm 與 pnpm 任選一套使用，不要刪另一套 lockfile。
+
+第一次啟動若沒有執行 `npm run db:migrate` 或 `pnpm run db:migrate`，API 會連得到 Postgres，但登入時會因為 `Employee` 資料表不存在而回 `500 INTERNAL_ERROR`。
 
 ## 日常啟動
 
@@ -47,14 +66,14 @@ docker compose up -d
 
 ```bash
 # 一鍵：兩邊 log 混在同一終端（concurrently，前綴 [api]/[web]）
-npm run dev
+npm run dev        # 或 pnpm run dev
 
 # 或 分開兩個終端，各看各的乾淨 log（debug / 讀 log 更清楚）
-npm run dev:api   # 終端 A：Express（tsx watch，:8090）
-npm run dev:web   # 終端 B：Vite（:3087）
+npm run dev:api   # 或 pnpm run dev:api；終端 A：Express（tsx watch，:8090）
+npm run dev:web   # 或 pnpm run dev:web；終端 B：Vite（:3087）
 ```
 
-`npm run dev` 帶 `--kill-others-on-fail`：任一邊崩了會連帶停掉另一邊，不會留下半殘的 stack。
+`npm run dev` / `pnpm run dev` 帶 `--kill-others-on-fail`：任一邊崩了會連帶停掉另一邊，不會留下半殘的 stack。
 
 要停掉：在對應終端按 `Ctrl+C`；docker 服務則 `docker compose down`。
 
@@ -62,15 +81,15 @@ npm run dev:web   # 終端 B：Vite（:3087）
 
 ```bash
 docker compose up -d
-npm run dev
+npm run dev        # 或 pnpm run dev
 ```
 
 但以下情況要先補跑資料庫指令：
 
-- 第一次 clone / 第一次啟動：`npm run db:migrate && npm run seed`
+- 第一次 clone / 第一次啟動：`npm run db:migrate && npm run seed`（pnpm 則 `pnpm run db:migrate && pnpm run seed`）
 - `docker compose down -v` 或刪掉 DB volume 後：`npm run db:migrate && npm run seed`
 - Prisma schema 或 migration 有更新後：`npm run db:migrate`
-- 只看到 `@prisma/client did not initialize yet`：先跑 `npm run db:migrate`；若 DB 已同步但仍失敗，再跑 `npm run db:generate --workspace apps/api`
+- 只看到 `@prisma/client did not initialize yet`：先跑 `npm run db:migrate`；若 DB 已同步但仍失敗，npm 跑 `npm run db:generate --workspace apps/api`，pnpm 跑 `pnpm --filter @vms/api run db:generate`
 
 ---
 
@@ -148,6 +167,8 @@ openspec/  本專案的需求／設計／規格／任務（OpenSpec）
 
 ## 常用指令
 
+以下以 npm 寫法為主；若你選 pnpm，根層 script 可把 `npm run <script>` 改成 `pnpm run <script>`。只有 workspace 單包指令需改成 pnpm filter，例如 `npm run db:generate --workspace apps/api` 對應 `pnpm --filter @vms/api run db:generate`。
+
 ```bash
 npm run dev          # 同時起 api + web（concurrently，--kill-others-on-fail）
 npm run dev:api      # 只起 api（Express / tsx watch）
@@ -177,6 +198,8 @@ TEST_DATABASE_URL=postgresql://vms:vms@localhost:5432/vms_test?schema=public
 
 ```bash
 npm run test:api
+# 或
+pnpm run test:api
 ```
 
 流程會先檢查 `TEST_DATABASE_URL` 存在且不能與 `DATABASE_URL` 指向同一個 database，接著建立缺失的 `vms_test`，並對 TestDB 執行 `prisma migrate reset --force`，再跑 Jest。每個 test case 前仍會透過 `resetDb()` 清空 `AuditLog`、`Vehicle`、`Employee`。
@@ -185,6 +208,8 @@ npm run test:api
 
 ```bash
 npm run db:test:prepare
+# 或
+pnpm run db:test:prepare
 ```
 
 測試結束後，pgAdmin 可展開 **Servers → VMS local → Databases → vms_test → Schemas → public → Tables** 觀察最後一個測試留下的資料。TestDB 只供測試使用；開發資料仍在 `vms`。
@@ -214,6 +239,9 @@ The table `public.Employee` does not exist in the current database.
 ```bash
 npm run db:migrate
 npm run seed
+# 或
+pnpm run db:migrate
+pnpm run seed
 ```
 
 如果只是帳密錯，API 應回 `401 INVALID_CREDENTIALS`，不會是 500。
@@ -228,21 +256,25 @@ Prisma Client 尚未產生或 `node_modules` 與目前執行環境不同步：
 
 ```bash
 npm run db:migrate
+# 或
+pnpm run db:migrate
 ```
 
 如果 migration 已同步但仍失敗：
 
 ```bash
 npm run db:generate --workspace apps/api
+# 或
+pnpm --filter @vms/api run db:generate
 ```
 
 ### `Cannot find module @rollup/rollup-linux-x64-gnu`
 
-通常是 Windows/WSL 混用 `node_modules`，或 npm optional dependencies 沒裝完整。請在同一個環境重建依賴：
+通常是 Windows/WSL 混用 `node_modules`，或 package manager optional dependencies 沒裝完整。請在同一個環境、同一套 package manager 重建依賴：
 
 ```bash
 rm -rf node_modules
-npm install
+npm install # 或 pnpm install
 ```
 
 然後重新：
@@ -250,6 +282,9 @@ npm install
 ```bash
 npm run db:migrate
 npm run dev
+# 或
+pnpm run db:migrate
+pnpm run dev
 ```
 
 ### Docker Compose 顯示 Windows bind mount / volume 路徑錯誤

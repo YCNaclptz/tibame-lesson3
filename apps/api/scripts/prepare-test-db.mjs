@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
@@ -6,7 +7,8 @@ import dotenv from "dotenv";
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const apiRoot = path.resolve(scriptDir, "..");
 const repoRoot = path.resolve(apiRoot, "../..");
-const prismaCli = path.join(repoRoot, "node_modules", "prisma", "build", "index.js");
+const requireFromApi = createRequire(path.join(apiRoot, "package.json"));
+const prismaCli = requireFromApi.resolve("prisma/build/index.js");
 
 function required(name) {
   const value = process.env[name];
